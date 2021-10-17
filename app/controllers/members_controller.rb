@@ -11,11 +11,12 @@ class MembersController < ApplicationController
 
     def create
         current_club = Club.find(params[:club_id])
-        member = current_club.members.build(member_params)
-        if member.save
-            render json: member, status: :created
+        new_member = current_club.members.build(member_params)
+        new_member.current_rank = current_club.members.count+1
+        if new_member.save
+            render json: new_member, status: :created
         else
-            render json: { errors: member.errors }, status:
+            render json: { errors: new_member.errors }, status:
             :unprocessable_entity
         end
     end
