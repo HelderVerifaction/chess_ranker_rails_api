@@ -2,7 +2,7 @@ class MembersController < ApplicationController
     before_action :set_product, only: %i[show update destroy]
     
     def index
-        render json: Member.all
+        render json: Member.all.order("current_rank ASC")
     end
 
     def show
@@ -31,6 +31,11 @@ class MembersController < ApplicationController
     end
 
     def destroy
+        members_to_move_up = Member.where('current_rank > ?',@member.current_rank)
+        members_to_move_up.each do |mem|
+            mem.current_rank -= 1
+            mem.save
+        end
         @member.destroy
         head 204
     end
