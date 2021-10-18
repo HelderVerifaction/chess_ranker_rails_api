@@ -1,17 +1,33 @@
 class ClubsController < ApplicationController
+
+    before_action :set_club, only: %i[show update destroy]
+
     def index
         render json: Club.all
     end
 
     def show
-        render json: Club.find(params[:id])
+        render json: @club
     end
+
+    def update
+        if @club.update(club_params)
+            render json:  @club
+        else
+            render json:  @club.errors, status:
+            :unprocessable_entity
+        end
+    end
+
+    def destroy
+        @club.destroy
+        head 204
+    end
+
 
     def result_draw
         higher_ranked_player = Member.find(params[:higher_id])
         lower_ranked_player = Member.find(params[:lower_id])
-        # higher_ranked_player.games_played = higher_ranked_player.games_played + 1
-        # lower_ranked_player.games_played = lower_ranked_player.games_played + 1
         higher_ranked_player.games_played += 1
         lower_ranked_player.games_played +=  1
         if (higher_ranked_player.current_rank - lower_ranked_player.current_rank).abs == 1
@@ -20,18 +36,15 @@ class ClubsController < ApplicationController
             render json: { message: "Result Captured. No Change in standings!"}
         else
             old_rank = lower_ranked_player.current_rank
-            members_moving_down = Member.where('current_rank >= ?',old_rank-1)
-            members_moving_down.select{ |x| x.id !=lower_ranked_player.id }
-            members_moving_down.each do |mem|
-                mem.current_rank += 1
-                mem.save
-            end
+            member_moving_down = Member.where('current_rank = ?',old_rank-1).first
+            member_moving_down.current_rank += 1
+            member_moving_down.save
+           
             lower_ranked_player.current_rank -= 1
             higher_ranked_player.save
             lower_ranked_player.save
             render json: { message: "Result Captured. Standings have changed!"}
-        end
-            
+        end   
     
     end
 
@@ -73,5 +86,16 @@ class ClubsController < ApplicationController
                 render json: { message: "Result Captured. Standings have changed!"}
             end
         end
+    end
+
+    private
+
+    def club_params
+        params.require(:club).permit(:name)
+    end
+
+
+    def set_club
+        @club = Club.find(params[:id])
     end
 end
