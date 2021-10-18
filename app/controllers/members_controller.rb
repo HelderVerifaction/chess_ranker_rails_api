@@ -1,5 +1,5 @@
 class MembersController < ApplicationController
-    before_action :set_product, only: %i[show update destroy]
+    before_action :set_member, only: %i[show update destroy]
     
     def index
         render json: Member.all.order("current_rank ASC")
@@ -12,6 +12,7 @@ class MembersController < ApplicationController
     def create
         current_club = Club.find(params[:club_id])
         new_member = current_club.members.build(member_params)
+        new_member.games_played = 0
         new_member.current_rank = current_club.members.count+1
         if new_member.save
             render json: new_member, status: :created
